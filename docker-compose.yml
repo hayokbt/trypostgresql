@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: my_postgres
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mypassword
+      TZ: Asia/Tokyo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: my_pgadmin
+    restart: always
+    ports:
+      - "8080:80" # ブラウザから http://localhost:8080 でアクセス
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com # ログイン用メール
+      PGADMIN_DEFAULT_PASSWORD: admin        # ログイン用パスワード
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
