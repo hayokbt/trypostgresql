@@ -12,6 +12,12 @@ services:
       TZ: Asia/Tokyo
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mydatabase"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   pgadmin:
     image: dpage/pgadmin4
@@ -23,7 +29,32 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@example.com # ログイン用メール
       PGADMIN_DEFAULT_PASSWORD: admin        # ログイン用パスワード
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+
+  javaback:
+    build:
+      context: ./javaback
+    container_name: my_javaback
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mydatabase
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: mypassword
+      SERVER_PORT: 8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: my_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
 
 volumes:
   postgres_data:
